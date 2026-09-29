@@ -1,0 +1,46 @@
+name: Build Prodify AI APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+
+      - name: Extract Prodify AI
+        run: |
+          rm -rf build-src
+          mkdir build-src
+          unzip -q ProdifyAI-GitHub-v1.zip -d build-src
+
+      - name: Build APK
+        working-directory: build-src/ProdifyAI
+        run: gradle --no-daemon :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProdifyAI-debug-apk
+          path: build-src/ProdifyAI/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
